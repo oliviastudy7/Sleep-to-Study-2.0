@@ -58,3 +58,4 @@ def main(pdf_path):
 # Replace this with the path to your PDF file
 pdf_path = "your_pdf_file.pdf"
 main(pdf_path)
+npm install
