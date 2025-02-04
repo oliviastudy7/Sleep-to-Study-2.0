@@ -1,0 +1,60 @@
+import re
+import time
+import PyPDF2
+from gtts import gTTS
+from pydub import AudioSegment
+from pydub.playback import play
+
+# Function to extract text from PDF
+def extract_text_from_pdf(pdf_path):
+    with open(pdf_path, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in range(len(reader.pages)):
+            text += reader.pages[page].extract_text()
+    return text
+
+# Function to remove text inside parentheses
+def remove_text_in_parentheses(text):
+    # This regular expression matches text inside parentheses (including the parentheses)
+    cleaned_text = re.sub(r'\(.*?\)', '', text)
+    return cleaned_text
+
+# Function to convert text to speech
+def text_to_speech(text, wpm_min=110, wpm_max=150):
+    # Calculate the appropriate speech rate based on WPM
+    words = text.split()
+    num_words = len(words)
+    avg_wpm = (wpm_min + wpm_max) // 2  # Average WPM for speech rate
+    # Calculate the number of seconds per word at the selected WPM
+    seconds_per_word = 60 / avg_wpm
+    # Create a speech from the text using gTTS
+    tts = gTTS(text=text, lang='en')
+    # Save the speech to an MP3 file
+    tts.save("output.mp3")
+    # Load the MP3 file and adjust playback speed to match the WPM
+    audio = AudioSegment.from_mp3("output.mp3")
+    audio = audio.speedup(playback_speed=(num_words / (seconds_per_word * len(words))))
+    return audio
+
+# Function to play the audio
+def play_audio(audio):
+    play(audio)
+
+# Main function to extract text, clean it, convert to speech, and loop the process
+def main(pdf_path):
+    while True:
+        print("Extracting text from PDF...")
+        text = extract_text_from_pdf(pdf_path)
+        print("Cleaning the text...")
+        cleaned_text = remove_text_in_parentheses(text)
+        print("Converting text to speech...")
+        audio = text_to_speech(cleaned_text)
+        print("Playing audio...")
+        play_audio(audio)
+        print("Audio finished, restarting...\n")
+        time.sleep(1)  # Small delay before restarting
+
+# Replace this with the path to your PDF file
+pdf_path = "your_pdf_file.pdf"
+main(pdf_path)
